@@ -9,10 +9,11 @@
 ## 功能特点
 
 - 支持代币交易对汇率计算
-- 处理高精度数值（支持最高 256 位精度）
+- 处理高精度数值（支持最高 38 位精度）
 - 自定义代币精度设置
 - 安全的数值溢出检查
-- 简单易用的 API
+- 完整的错误处理
+- 支持人类可读的价格展示
 
 ## 安装
 
@@ -20,39 +21,78 @@
 
 ```toml
 [dependencies]
-input_output = "0.1.1"
+input_output = "0.1.2"
 ```
 
 ## 使用示例
 
+### 基本用法
+
 ```rust
 use input_output::*;
 
-let price = PairRate {
-    token_pair: ("TOKEN_A".to_string(), "TOKEN_B".to_string()),
-    rate: (10, 19), // 1 TOKEN_A = 1.9 TOKEN_B
-    decimals: (24, 24),
-};
+// 创建价格对实例
+let price = PairRate::new(
+    ("TOKEN_A".to_string(), "TOKEN_B".to_string()),
+    (10, 19),  // 汇率 1.9（19/10）
+    (24, 24),  // 两个代币都使用24位精度
+).unwrap();
 
-// 输入1个token（24位精度）
-let input_amount = 200_000_000_000_000_000_000_000_000u128; // 1 token with 24 decimals
+// 计算输出金额（输入 1 个 TOKEN_A）
+let input_amount = 1_000_000_000_000_000_000_000_000u128; // 1 token with 24 decimals
 let output = PairRate::calculate_output_amount(&price, input_amount).unwrap();
 println!("Output amount: {}", output);
+
+// 获取人类可读的价格
+let human_readable = price.get_human_readable_rate(); // 1.9
 ```
 
-## 主要类型说明
+### 不同精度代币
 
-### PairRate
+```rust
+// 创建不同精度的价格对
+let price = PairRate::new(
+    ("TOKEN_A".to_string(), "TOKEN_B".to_string()),
+    (1, 1),    // 1:1 汇率
+    (18, 6),   // TOKEN_A 使用18位精度，TOKEN_B 使用6位精度
+).unwrap();
 
-`PairRate` 结构体用于表示代币交易对的汇率信息：
+// 输入 1 个 TOKEN_A（18位精度）
+let input_amount = 1_000_000_000_000_000_000u128;
+let output = PairRate::calculate_output_amount(&price, input_amount).unwrap();
+```
 
-- `token_pair`: 交易对的代币符号 (input_token, output_token)
-- `rate`: 汇率比例 (input_rate, output_rate)
-- `decimals`: 代币精度 (input_decimals, output_decimals)
+## 常量限制
+
+- `MAX_DECIMALS`: 38 - 支持的最大精度
+- `MAX_DECIMAL_DIFF`: 32 - 支持的最大精度差
+- `MAX_RATE`: u128::MAX / 2 - 最大安全汇率
 
 ## API 文档
 
 详细的 API 文档可以在 [docs.rs](https://docs.rs/input_output) 查看。
+
+### 主要类型
+
+#### PairRate
+
+代币交易对的价格信息结构体：
+
+```rust
+pub struct PairRate {
+    pub token_pair: (String, String),  // (输入代币, 输出代币)
+    pub rate: (u128, u128),            // (输入比率, 输出比率)
+    pub decimals: (u8, u8),            // (输入精度, 输出精度)
+}
+```
+
+### 主要方法
+
+- `PairRate::new()` - 创建新的价格对实例
+- `calculate_output_amount()` - 计算输出金额
+- `calculate_input_amount()` - 计算所需输入金额
+- `get_price_rate()` - 获取精确价格率
+- `get_human_readable_rate()` - 获取人类可读的价格率
 
 ## 错误处理
 
@@ -60,6 +100,8 @@ println!("Output amount: {}", output);
 - 数值溢出
 - 除零错误
 - 精度超出范围
+- 无效汇率
+- 精度差过大
 
 ## 最低支持的 Rust 版本（MSRV）
 
@@ -79,9 +121,11 @@ println!("Output amount: {}", output);
 ## 更新日志
 
 ### 0.1.1 (2024-XX-XX)
-- 改进文档
-- 添加详细使用示例
-- 完善错误处理
+- 添加 `PairRate::new()` 构造函数
+- 添加安全限制常量
+- 改进错误处理
+- 添加人类可读的价格率方法
+- 完善文档和示例
 
 ### 0.1.0 (2024-XX-XX)
 - 初始发布

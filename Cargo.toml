@@ -1,6 +1,6 @@
 [package]
 name = "input_output"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["rooct"]
 description = "一个用于处理大数输入输出的 Rust 库"
