@@ -1,12 +1,12 @@
 [package]
 name = "input_output"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["rooct"]
 description = "一个用于处理大数输入输出的 Rust 库"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/rooct/input_output"
+repository = "https://github.com/rooct/input_output-rs.git"
 keywords = ["bigint", "io", "input", "output", "numbers"]
 categories = ["mathematics", "algorithms"]
 
